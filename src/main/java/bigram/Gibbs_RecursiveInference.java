@@ -29,6 +29,8 @@ public class Gibbs_RecursiveInference {
     private String resultsDir;
     private String bayes;
 
+    private double simExpo = 1;
+
     public String generateFeatureString() {
         if (featuresBooleanList[0] == true) {
             featString = featString + "_Pois";
@@ -51,7 +53,30 @@ public class Gibbs_RecursiveInference {
         // <outputDir> <wordListDir> <>
         Gibbs_RecursiveInference i = new Gibbs_RecursiveInference(args[0], args[1], Integer.parseInt(args[2]), Integer.parseInt(args[3]),
                 Boolean.valueOf(args[4]),
-                Integer.parseInt(args[5]), Double.parseDouble(args[6]), Double.parseDouble(args[7]), args[8], "ml");
+                Integer.parseInt(args[5]), Double.parseDouble(args[6]), Double.parseDouble(args[7]), args[8], Double.parseDouble(args[9]), "ml");
+
+        i.featString = i.generateFeatureString();
+
+        System.out.println("-----BASELINE SEGMENTATIONS-------");
+        for (Sample s : i.samples) {
+            System.out.println(s.getWord() + "--> " + s.getSegmentation());
+        }
+        System.out.println("-----END OF BASELINE SEGMENTATIONS-------");
+        System.out.println("-----SAMPLING-------");
+        i.doSampling();
+        System.out.println("-----END OF SAMPLING-------");
+
+        System.out.println("-----SEGMENTATIONS: AFTER SAMPLING-------");
+        for (Sample s : i.samples) {
+            System.out.println(s.getWord() + "--> " + s.getSegmentation());
+        }
+    }
+
+    public static void doMain(String[] args) throws IOException, ClassNotFoundException {
+        // <outputDir> <wordListDir> <>
+        Gibbs_RecursiveInference i = new Gibbs_RecursiveInference(args[0], args[1], Integer.parseInt(args[2]), Integer.parseInt(args[3]),
+                Boolean.valueOf(args[4]),
+                Integer.parseInt(args[5]), Double.parseDouble(args[6]), Double.parseDouble(args[7]), args[8], Double.parseDouble(args[9]), "ml");
 
         i.featString = i.generateFeatureString();
 
@@ -72,7 +97,7 @@ public class Gibbs_RecursiveInference {
 
     public Gibbs_RecursiveInference(String outputDir, String wordListDir,
                                     int noOfIteration, int freqThreshold, boolean includeFreq, int heuristic,
-                                    double simUnsegmentedArg, double simUnfoundArg, String resultsDir, String bayes) throws IOException, ClassNotFoundException {
+                                    double simUnsegmentedArg, double simUnfoundArg, String resultsDir, double simExpo, String bayes) throws IOException, ClassNotFoundException {
 
         Constant baseline = new Constant(outputDir, wordListDir, heuristic, simUnsegmentedArg, simUnfoundArg, freqThreshold, includeFreq);
         this.resultsDir = resultsDir;
@@ -80,6 +105,7 @@ public class Gibbs_RecursiveInference {
         this.heuristic = heuristic;
         this.noOfIteration = noOfIteration;
         this.noOfIterationCopy = noOfIteration;
+        this.simExpo = simExpo;
         this.frequencyTable = new HashMap<>(baseline.getMorphemeFreq());
         this.bigramFreq = new HashMap(baseline.getBigramFreq());
         this.samples = new CopyOnWriteArrayList<>(baseline.getSampleList());
@@ -166,7 +192,7 @@ public class Gibbs_RecursiveInference {
         ArrayList<Double> similarities = new ArrayList<>();
         ArrayList<Double> normalizedSimilarities = new ArrayList<>();
         double simTotal = 0.0;
-        for (String split : possibleSplits){
+        for (String split : possibleSplits) {
             double simScore = Sample.calculateSimilarityWithHashMap(split);
             simTotal = simTotal + simScore;
             similarities.add(simScore);
@@ -176,12 +202,12 @@ public class Gibbs_RecursiveInference {
 
         double forNormalize = 0.0;
         double dpScore = 0.0;
-        for (int i=0;i<possibleSplits.size();i++) {
+        for (int i = 0; i < possibleSplits.size(); i++) {
 
             //ArrayList<Double> priors = sample.calculateScores(split, featuresBooleanList);  // //0:poisson, 1:similarity, 2:presence, 3: length
             double normalizedSim = 0.0;
-            if (simTotal != 0.0){
-                 normalizedSim = similarities.get(i)/ simTotal;
+            if (simTotal != 0.0) {
+                normalizedSim = similarities.get(i) / simTotal;
             }
             normalizedSimilarities.add(normalizedSim);
 
@@ -194,7 +220,7 @@ public class Gibbs_RecursiveInference {
             }
 
             //double total = dpScore + priors.get(0) + priors.get(1) + priors.get(2) + priors.get(3);
-            double total = dpScore + normalizedSim;
+            double total = dpScore + Math.pow(normalizedSim, simExpo);
 
             //       System.out.printf("%s%13f%13f%13f%13f%13f", split, dpScore, priors.get(0), priors.get(1), priors.get(2), priors.get(3));
             //      System.out.println();
