@@ -1,6 +1,5 @@
-package unigram;
+package map.unigram;
 
-import unigram.Constant;
 import org.canova.api.util.MathUtils;
 
 import java.util.*;

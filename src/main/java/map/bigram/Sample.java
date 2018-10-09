@@ -1,4 +1,4 @@
-package bigram;
+package map.bigram;
 
 import java.util.ArrayList;
 

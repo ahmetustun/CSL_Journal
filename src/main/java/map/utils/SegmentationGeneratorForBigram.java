@@ -1,8 +1,8 @@
-package utils;
+package map.utils;
 
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
-import unigram.Constant;
+import map.unigram.Constant;
 
 import java.io.*;
 import java.nio.charset.Charset;

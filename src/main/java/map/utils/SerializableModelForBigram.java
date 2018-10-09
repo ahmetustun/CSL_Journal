@@ -1,4 +1,4 @@
-package utils;
+package map.utils;
 
 import java.io.Serializable;
 import java.util.ArrayList;

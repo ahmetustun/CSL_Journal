@@ -1,6 +1,5 @@
-package bigram;
+package map.bigram;
 
-import bigram.Constant;
 import org.canova.api.util.MathUtils;
 
 import java.util.*;

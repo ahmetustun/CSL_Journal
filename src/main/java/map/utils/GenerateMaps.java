@@ -1,4 +1,4 @@
-package utils;
+package map.utils;
 
 import org.apache.commons.io.FileUtils;
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;

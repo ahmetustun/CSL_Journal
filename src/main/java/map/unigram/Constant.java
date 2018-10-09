@@ -1,13 +1,10 @@
-package bigram;
+package map.unigram;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.MalformedInputException;
 import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -21,13 +18,11 @@ public class Constant {
     private static double simUnsegmented;
     private static int heuristic = 2;
     private static double smoothingCoefficient = 0.01;
-    private static double bigramSmoothingCoefficient = 0.001;
     private static int frequencyThreshold;
     private static HashMap<String, Double> cosineTable;
     private static boolean includeFrequencies = true;
 
     private Map<String, Integer> morphemeFreq = new ConcurrentHashMap<>();
-    private Map<String, HashMap<String, Integer>> bigramFreq = new HashMap<>();
     private CopyOnWriteArrayList<Sample> sampleList = new CopyOnWriteArrayList<>();
 
     public static double getSimUnfound() {
@@ -36,10 +31,6 @@ public class Constant {
 
     public static boolean getIncludeFrequency() {
         return includeFrequencies;
-    }
-
-    public static double getBigramSmoothingCoefficient() {
-        return bigramSmoothingCoefficient;
     }
 
     public static double getSmoothingCoefficient() {
@@ -64,10 +55,6 @@ public class Constant {
 
     public CopyOnWriteArrayList<Sample> getSampleList() {
         return sampleList;
-    }
-
-    public Map<String, HashMap<String, Integer>> getBigramFreq() {
-        return bigramFreq;
     }
 
     public Map<String, Integer> getMorphemeFreq() {
@@ -108,81 +95,40 @@ public class Constant {
         System.out.println(">>>>>>>>> Number of Processed Word: " + numberOfProcessedWord);
     }
 
-    //test
     private void constructLists(String w, int f) {
         String randomSegmentation = Operations.randomSplitB(w);
         sampleList.add(new Sample(w, randomSegmentation));
+        String uSymbol = "$";
 
         int frequency = 1;
         if (includeFrequencies) {
             frequency = f;
         }
 
-        String uSymbol = "$";
+        StringTokenizer tokenizer = new StringTokenizer(randomSegmentation, "+");
 
-        if (!randomSegmentation.contains("+")) {
-            String stem = randomSegmentation;
-            if (morphemeFreq.containsKey(stem)) {
-                morphemeFreq.put(stem, morphemeFreq.get(stem) + frequency);
+        if (tokenizer.countTokens() == 1) {
+            String suffix = uSymbol;
+            if (morphemeFreq.containsKey(suffix)) {
+                morphemeFreq.put(suffix, morphemeFreq.get(suffix) + frequency);
             } else {
-                morphemeFreq.put(stem, frequency);
+                morphemeFreq.put(suffix, frequency);
             }
+        }
 
-            if (morphemeFreq.containsKey(uSymbol)) {
-                morphemeFreq.put(uSymbol, morphemeFreq.get(uSymbol) + frequency);
-            } else {
-                morphemeFreq.put(uSymbol, frequency);
-            }
-
-            HashMap<String, Integer> transitions;
-            if (bigramFreq.containsKey(stem)) {
-                transitions = bigramFreq.get(stem);
-                if (transitions.containsKey(uSymbol)) {
-                    transitions.put(uSymbol, transitions.get(uSymbol) + frequency);
-                } else {
-                    transitions.put(uSymbol, frequency);
-                }
-            } else {
-                transitions = new HashMap<>();
-                transitions.put(uSymbol, frequency);
-            }
-            bigramFreq.put(stem, transitions);
-
+        String stem = tokenizer.nextToken();
+        if (morphemeFreq.containsKey(stem)) {
+            morphemeFreq.put(stem, morphemeFreq.get(stem) + frequency);
         } else {
-            StringTokenizer tokenizer = new StringTokenizer(randomSegmentation, "+");
-            String stem = tokenizer.nextToken();
-            if (morphemeFreq.containsKey(stem)) {
-                morphemeFreq.put(stem, morphemeFreq.get(stem) + frequency);
+            morphemeFreq.put(stem, frequency);
+        }
+
+        while (tokenizer.hasMoreTokens()) {
+            String suffix = tokenizer.nextToken();
+            if (morphemeFreq.containsKey(suffix)) {
+                morphemeFreq.put(suffix, morphemeFreq.get(suffix) + frequency);
             } else {
-                morphemeFreq.put(stem, frequency);
-            }
-
-            String curr = stem;
-            String next = null;
-            while (tokenizer.hasMoreTokens()) {
-
-                next = tokenizer.nextToken();
-
-                if (morphemeFreq.containsKey(next)) {
-                    morphemeFreq.put(next, morphemeFreq.get(next) + frequency);
-                } else {
-                    morphemeFreq.put(next, frequency);
-                }
-
-                HashMap<String, Integer> transitions;
-                if (bigramFreq.containsKey(curr)) {
-                    transitions = bigramFreq.get(curr);
-                    if (transitions.containsKey(next)) {
-                        transitions.put(next, transitions.get(next) + frequency);
-                    } else {
-                        transitions.put(next, frequency);
-                    }
-                } else {
-                    transitions = new HashMap<>();
-                    transitions.put(next, frequency);
-                }
-                bigramFreq.put(curr, transitions);
-                curr = next;
+                morphemeFreq.put(suffix, frequency);
             }
         }
     }

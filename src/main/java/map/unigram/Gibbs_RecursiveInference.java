@@ -1,7 +1,7 @@
-package unigram;
+package map.unigram;
 
 import org.apache.commons.io.FileUtils;
-import utils.SerializableModel;
+import map.utils.SerializableModel;
 
 import java.io.*;
 import java.util.*;

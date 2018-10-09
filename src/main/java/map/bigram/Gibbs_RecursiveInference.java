@@ -1,7 +1,7 @@
-package bigram;
+package map.bigram;
 
 import org.apache.commons.io.FileUtils;
-import utils.SerializableModelForBigram;
+import map.utils.SerializableModelForBigram;
 
 import java.io.*;
 import java.util.*;

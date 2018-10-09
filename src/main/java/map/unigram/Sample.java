@@ -1,4 +1,4 @@
-package unigram;
+package map.unigram;
 
 import java.util.ArrayList;
 
